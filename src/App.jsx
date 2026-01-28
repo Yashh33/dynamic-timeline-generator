@@ -1,3 +1,4 @@
+// App.jsx
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toJpeg, toPng } from 'html-to-image';
 import './App.css';
@@ -118,6 +119,10 @@ function sanitizeImportedModel(raw) {
     rows: deepClone(starterRows),
     rowHeightMode: 'auto',
     manualRowHeight: 42,
+
+    // ✅ NEW (Bar Thickness)
+    barHeightMode: 'auto', // auto | manual
+    manualBarHeight: 18,
   };
 
   if (!raw || typeof raw !== 'object') return fallback;
@@ -137,6 +142,18 @@ function sanitizeImportedModel(raw) {
     Number(raw.manualRowHeight || fallback.manualRowHeight),
     18,
     64
+  );
+
+  // ✅ NEW (Bar Thickness)
+  const barHeightMode =
+    raw.barHeightMode === 'manual' || raw.barHeightMode === 'auto'
+      ? raw.barHeightMode
+      : 'auto';
+
+  const manualBarHeight = clamp(
+    Number(raw.manualBarHeight ?? fallback.manualBarHeight),
+    6,
+    60
   );
 
   const rowsRaw = Array.isArray(raw.rows) ? raw.rows : fallback.rows;
@@ -181,6 +198,10 @@ function sanitizeImportedModel(raw) {
     rows: rows.length ? rows : deepClone(starterRows),
     rowHeightMode,
     manualRowHeight,
+
+    // ✅ NEW (Bar Thickness)
+    barHeightMode,
+    manualBarHeight,
   };
 }
 
@@ -227,6 +248,10 @@ export default function App() {
     rows: starterRows,
     rowHeightMode: 'auto',
     manualRowHeight: 42,
+
+    // ✅ NEW (Bar Thickness)
+    barHeightMode: 'auto', // auto | manual
+    manualBarHeight: 18,
   });
 
   const modelRef = useRef(model);
@@ -325,7 +350,15 @@ export default function App() {
   const autoH = useMemo(() => autoRowHeight(rows.length), [rows.length]);
   const rowHeightPx =
     model.rowHeightMode === 'manual' ? model.manualRowHeight : autoH;
+
   const sizing = useMemo(() => deriveSizing(rowHeightPx), [rowHeightPx]);
+
+  // ✅ NEW: effective bar thickness (independent from row height)
+  const maxBar = Math.max(6, Math.round(rowHeightPx * 0.9)); // keep within row
+  const effectiveBarHeight =
+    model.barHeightMode === 'manual'
+      ? clamp(Number(model.manualBarHeight || 0), 6, maxBar)
+      : sizing.barHeightPx;
 
   // keep selectedRow task
   useEffect(() => {
@@ -999,61 +1032,124 @@ export default function App() {
           </div>
         </div>
 
-        <div className="toolRow">
-          <label className="toolLabel">Row Height</label>
-          <select
-            className="toolSelect"
-            value={model.rowHeightMode}
-            onChange={(e) =>
-              commit((m) => {
-                m.rowHeightMode = e.target.value;
-                if (m.rowHeightMode === 'manual' && !m.manualRowHeight) {
-                  m.manualRowHeight = autoH;
-                }
-                return m;
-              })
+        <div className="toolGrid2">
+  {/* LEFT: Row Height */}
+  <div className="toolGroup">
+    <div className="toolRow">
+      <label className="toolLabel">Row Height</label>
+      <select
+        className="toolSelect"
+        value={model.rowHeightMode}
+        onChange={(e) =>
+          commit((m) => {
+            m.rowHeightMode = e.target.value;
+            if (m.rowHeightMode === 'manual' && !m.manualRowHeight) {
+              m.manualRowHeight = autoH;
             }
-          >
-            <option value="auto">Auto</option>
-            <option value="manual">Manual</option>
-          </select>
+            return m;
+          })
+        }
+      >
+        <option value="auto">Auto</option>
+        <option value="manual">Manual</option>
+      </select>
 
-          <button
-            className="toolBtn"
-            onClick={() =>
-              commit((m) => {
-                m.rowHeightMode = 'auto';
-                return m;
-              })
-            }
-            title="Switch back to auto sizing"
-          >
-            Reset to Auto
-          </button>
+      <button
+        className="toolBtn"
+        onClick={() =>
+          commit((m) => {
+            m.rowHeightMode = 'auto';
+            return m;
+          })
+        }
+        title="Switch back to auto sizing"
+      >
+        Reset to Auto
+      </button>
 
-          <div className="toolHint">
-            Current: <b>{sizing.rowHeightPx}px</b> (Auto suggestion: {autoH}px)
-          </div>
-        </div>
+      <div className="toolHint">
+        Current: <b>{sizing.rowHeightPx}px</b> (Auto suggestion: {autoH}px)
+      </div>
+    </div>
 
-        <div className="toolRow">
-          <label className="toolLabel">Adjust</label>
-          <input
-            className="toolSlider"
-            type="range"
-            min={18}
-            max={64}
-            value={model.manualRowHeight}
-            onChange={(e) =>
-              commit((m) => {
-                m.rowHeightMode = 'manual';
-                m.manualRowHeight = Number(e.target.value);
-                return m;
-              })
-            }
-          />
-          <div className="toolValue">{model.manualRowHeight}px</div>
-        </div>
+    <div className="toolRow">
+      <label className="toolLabel">Adjust</label>
+      <input
+        className="toolSlider"
+        type="range"
+        min={18}
+        max={64}
+        value={model.manualRowHeight}
+        onChange={(e) =>
+          commit((m) => {
+            m.rowHeightMode = 'manual';
+            m.manualRowHeight = Number(e.target.value);
+            return m;
+          })
+        }
+      />
+      <div className="toolValue">{model.manualRowHeight}px</div>
+    </div>
+  </div>
+
+  {/* RIGHT: Bar Size */}
+  <div className="toolGroup">
+    <div className="toolRow">
+      <label className="toolLabel">Bar Size</label>
+      <select
+        className="toolSelect"
+        value={model.barHeightMode}
+        onChange={(e) =>
+          commit((m) => {
+            m.barHeightMode = e.target.value;
+            return m;
+          })
+        }
+      >
+        <option value="auto">Auto</option>
+        <option value="manual">Manual</option>
+      </select>
+
+      <button
+        className="toolBtn"
+        onClick={() =>
+          commit((m) => {
+            m.barHeightMode = 'auto';
+            return m;
+          })
+        }
+        title="Switch bar sizing back to auto"
+      >
+        Reset to Auto
+      </button>
+
+      <div className="toolHint">
+        Current: <b>{effectiveBarHeight}px</b>
+        {model.barHeightMode === 'auto' ? ' (Auto)' : ' (Manual)'}
+      </div>
+    </div>
+
+    <div className="toolRow">
+      <label className="toolLabel">Adjust</label>
+      <input
+        className="toolSlider"
+        type="range"
+        min={6}
+        max={maxBar}
+        value={model.manualBarHeight}
+        onChange={(e) =>
+          commit((m) => {
+            m.barHeightMode = 'manual';
+            m.manualBarHeight = Number(e.target.value);
+            return m;
+          })
+        }
+        disabled={model.barHeightMode !== 'manual'}
+      />
+      <div className="toolValue">{model.manualBarHeight}px</div>
+    </div>
+  </div>
+</div>
 
         {interactiveOn && (
           <div className="interactiveModeRow">
@@ -1114,7 +1210,8 @@ export default function App() {
             ['--ticksCount']: ticksCount,
             ['--weekColPx']: `${weekColPx}px`,
             ['--rowHeightPx']: `${sizing.rowHeightPx}px`,
-            ['--barHeightPx']: `${sizing.barHeightPx}px`,
+            // ✅ NEW: use effective bar height
+            ['--barHeightPx']: `${effectiveBarHeight}px`,
             ['--headerHeightPx']: `${sizing.headerHeightPx}px`,
             ['--labelFontPx']: `${sizing.labelFontPx}px`,
             ['--labelPadYPx']: `${sizing.labelPadYPx}px`,

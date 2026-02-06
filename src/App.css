@@ -24,7 +24,7 @@ body {
 
 .page {
   padding: 16px;
-  max-width: 1400px; /* widened a bit so 3 cards fit cleanly */
+  max-width: 1900px; /* widened a bit so 3 cards fit cleanly */
   margin: 0 auto;
 }
 
@@ -43,24 +43,27 @@ body {
 
 .controls {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr; /* mobile */
   gap: 10px;
-  margin-bottom: 8px; /* pulled timeline up */
+  margin-bottom: 8px;
+  align-items: stretch; /* important */
 }
 
 /* 2 columns on medium screens */
 @media (min-width: 980px) {
   .controls {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
-/* 3 columns on wide screens so 1/2/3 align in ONE row */
+/* 4 columns on wide screens */
 @media (min-width: 1250px) {
   .controls {
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: repeat(4, 1fr);
+    align-items: start;
   }
 }
+
 
 .card {
   background: #ffffff;
@@ -68,6 +71,9 @@ body {
   border-radius: 14px;
   padding: 12px;
   box-shadow: 0 10px 24px rgba(2, 6, 23, 0.06);
+  height: 500px;         /* tweak this number */
+  display: flex;         /* important */
+  flex-direction: column;
 }
 .cardTitle {
   font-weight: 800;
@@ -99,6 +105,22 @@ body {
   outline: none;
 }
 .input:focus {
+  border-color: rgba(79, 166, 214, 0.85);
+  box-shadow: 0 0 0 3px rgba(79, 166, 214, 0.18);
+}
+
+.costTextarea {
+  width: 100%;
+  border-radius: 12px;
+  padding: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.18);
+  outline: none;
+  font-size: 13px;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  height: 150px;  /* tweak */
+  resize: vertical; /* keep if you want user to resize */
+}
+.costTextarea:focus {
   border-color: rgba(79, 166, 214, 0.85);
   box-shadow: 0 0 0 3px rgba(79, 166, 214, 0.18);
 }
@@ -298,8 +320,6 @@ body {
     grid-template-columns: 1fr;
   }
 }
-
-
 
 .toolLabel {
   width: 80px;
@@ -513,7 +533,6 @@ body {
   margin: 0 3px;
   border-radius: 8px;
   background: var(--blue);
-  /* box-shadow: 0 8px 18px rgba(2, 6, 23, 0.18); */
   pointer-events: auto;
   cursor: pointer;
 }
@@ -622,4 +641,77 @@ body {
   margin-top: 10px;
   font-size: 12px;
   color: var(--muted);
+}
+
+/* Row picker dropdown (replaces bubbles) */
+.rowPickerWrap {
+  position: relative;
+  flex: 1;
+  min-width: 180px;
+}
+
+.rowPickerMenu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  max-height: 260px;
+  overflow: auto;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.16);
+  border-radius: 12px;
+  box-shadow: 0 10px 24px rgba(2, 6, 23, 0.10);
+  z-index: 50;
+  padding: 6px;
+}
+
+.rowPickerItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.rowPickerItem:hover {
+  background: rgba(2, 6, 23, 0.04);
+}
+
+.rowPickerLabel {
+  font-weight: 700;
+  font-size: 13px;
+  color: rgba(15, 23, 42, 0.9);
+}
+
+.rowPickerDel {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-weight: 900;
+  color: rgba(15, 23, 42, 0.55);
+  padding: 6px 8px;
+  border-radius: 10px;
+}
+
+.rowPickerDel:hover {
+  background: rgba(239, 68, 68, 0.10);
+  color: rgba(239, 68, 68, 0.9);
+}
+
+.rowPickerEmpty {
+  padding: 10px;
+  font-size: 12px;
+  color: rgba(71, 85, 105, 1);
+}
+
+.btnSmall{
+  padding: 8px 12px;
+  font-size: 13px;
+  border-radius: 10px;
+}
+
+.btnSmallWide{
+  min-width: 180px; /* optional */
 }
